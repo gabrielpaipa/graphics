@@ -49,6 +49,29 @@ int D2d_negate_sincos(double a[3][3], double b[3][3], double sn, double cs){
 }
 
 
+int D2d_rotate_sincos(double a[3][3], double b[3][3], double sn, double cs){
+
+	double t[3][3] ;
+	
+	D2d_make_identity(t) ;
+	
+	t[0][0] = cs ; t[0][1] = -sn ; 
+	t[1][0] = sn ; t[1][1] = cs ;
+
+	D2d_mat_mult(a, t, a) ;
+
+	t[0][0] = cs ; t[0][1] = sn ; 
+	t[1][0] = -sn ; t[1][1] = cs ;
+
+	D2d_mat_mult(b, b, t) ;
+
+	return 1;
+}
+
+
+
+
+
 int main(int argc, char **argv){
   G_init_graphics (1000, 1000) ;
   double a[100], b[100], p[2], x1, x2, y1, y2, mat[3][3], invmat[3][3] ;
@@ -65,33 +88,43 @@ int main(int argc, char **argv){
   
   G_wait_click(p) ; x2 = p[0] ; y2 = p[1] ;
   G_fill_circle (x2, y2, 2) ;
+
+  D2d_make_identity(mat) ; D2d_make_identity(invmat) ;
   
-  G_line(x1, y1, x2, y2) ;
-  
-  
+  // SPECIAL CASE: A PERFECTLY HORIZONTAL LINE
+  if (x2==x1){
+   
+    
+    
+  }
+  else {
+   
+  // What is x when y==0 using parametric equation of line? 
+  double x = -( (x2-x1)*(-y2) - (y2-y1)*(-x2))/(y2-y1) ;
+
   double dx = x2 - x1 ; double dy = y2 - y1 ;
   double hypothenuse = sqrt(dx*dx + dy*dy) ;
   
   double cs = dx/hypothenuse ;
   double sn = dy/hypothenuse ;
   
+  //Get close to the origin!
+  D2d_translate(mat, invmat, x, 0 ) ;
+  D2d_rotate_sincos(mat, invmat, cs, sn) ;
+  D2d_negate_y(mat, invmat) ;
+  D2d_rotate_sincos(mat, invmat, -cs, -sn) ;
+  D2d_translate(mat, invmat, -x, 0) ;
   
+
+  //D2d_negate_sincos(mat, invmat, cs, sn) ;
   
-  D2d_make_identity(mat) ; D2d_make_identity(invmat) ;
-  D2d_negate_sincos(mat, invmat, cs, sn) ;
-  D2d_translate(mat, invmat, 300, 0 ) ;
+  }
   D2d_mat_mult_points(a, b, mat, a, b, m) ;
   
-  /* NEED TO FIND A WAY OF FINDING THE LENGTH BETWEEN THE LINE DRAWN AND
-     THE POINTS OF THE SHAPE.
-     
-     PARAMTRIC EQUATION IS NECESSARY!
-     
-     
-     
-     
-  */
+  
 
+  
+  G_line(x1, y1, x2, y2) ;
   
   G_fill_polygon(a,b,m) ;
 
@@ -100,5 +133,4 @@ int main(int argc, char **argv){
 
   
   G_wait_key() ;
-  
 }
